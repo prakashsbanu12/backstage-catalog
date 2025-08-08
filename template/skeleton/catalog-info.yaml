@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ parameters.component_id }}
+  description: A React app with a form created via Backstage
+  annotations:
+    github.com/project-slug: ${{ parameters.repoUrl | parseRepoURL | repoProjectSlug }}
+spec:
+  type: website
+  lifecycle: experimental
+  owner: ${{ parameters.owner }}
