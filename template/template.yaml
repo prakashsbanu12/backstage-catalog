@@ -1,0 +1,81 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: my-form-template
+  title: Simple Form Template
+  description: Creates a React app with a customizable form
+  tags:
+    - react
+    - form
+spec:
+  owner: user:default/guest
+  type: website
+  parameters:
+    - title: Repository Details
+      required:
+        - component_id
+        - owner
+        - repoUrl
+      properties:
+        component_id:
+          title: Component Name
+          type: string
+          description: Unique name for the app (e.g., my-form-app)
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$
+        owner:
+          title: Owner
+          type: string
+          description: Your Backstage user or group
+          ui:field: OwnerPicker
+        repoUrl:
+          title: Repository Location
+          type: string
+          description: Where to create the new GitHub repo
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+    - title: Form Configuration
+      required:
+        - formTitle
+        - nameLabel
+        - emailLabel
+      properties:
+        formTitle:
+          title: Form Title
+          type: string
+          description: Title to show on the form (e.g., Contact Form)
+        nameLabel:
+          title: Name Field Label
+          type: string
+          description: Label for the name field (e.g., Your Name)
+        emailLabel:
+          title: Email Field Label
+          type: string
+          description: Label for the email field (e.g., Your Email)
+  steps:
+    - id: fetch-base
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          component_id: ${{ parameters.component_id }}
+          owner: ${{ parameters.owner }}
+          formTitle: ${{ parameters.formTitle }}
+          nameLabel: ${{ parameters.nameLabel }}
+          emailLabel: ${{ parameters.emailLabel }}
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        allowedHosts: ["github.com"]
+        description: A React app with a form created via Backstage
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
