@@ -1,8 +1,0 @@
-apiVersion: backstage.io/v1alpha1
-kind: Template
-metadata:
-  name: my-form-template
-  description: A form-based template
-spec:
-  type: form
-  path: ./template.yaml
