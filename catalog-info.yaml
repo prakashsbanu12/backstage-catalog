@@ -1,9 +1,8 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: Template
 metadata:
-  name: sample-html-site
-  description: A simple HTML site created via Backstage
+  name: my-form-template
+  description: A form-based template
 spec:
-  type: website
-  lifecycle: experimental
-  owner: user:guest
+  type: form
+  path: ./template.yaml
