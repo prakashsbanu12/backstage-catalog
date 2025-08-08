@@ -1,16 +1,48 @@
-name: Greetings
+name: Backstage Greetings & Validation
 
-on: [pull_request_target, issues]
+on:
+  pull_request_target:
+    types: [opened]
+  issues:
+    types: [opened]
 
 jobs:
-  greeting:
+  greet-and-validate:
     runs-on: ubuntu-latest
     permissions:
       issues: write
       pull-requests: write
+      contents: read
+
     steps:
-    - uses: actions/first-interaction@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Message that will be displayed on users' first issue"
-        pr-message: "Message that will be displayed on users' first pull request"
+      # 👋 First-time contributor greeting
+      - name: Greet first-time contributor
+        uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: "👋 Welcome! Thanks for opening your first issue in our Backstage repo. We'll review it shortly."
+          pr-message: "🎉 Thanks for your first PR! If it includes a catalog entity, make sure your `catalog-info.yaml` is valid."
+
+      # ✅ Validate catalog-info.yaml if present
+      - name: Check for catalog-info.yaml
+        run: |
+          if [ -f "catalog-info.yaml" ]; then
+            echo "Found catalog-info.yaml"
+            # You can add validation logic here, e.g. using backstage-cli
+          else
+            echo "No catalog-info.yaml found"
+          fi
+
+      # 🏷️ Optional: Add label to Backstage-related PRs
+      - name: Label Backstage PR
+        if: github.event_name == 'pull_request_target'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['backstage']
+            })
