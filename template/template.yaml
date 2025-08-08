@@ -1,39 +1,67 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: sample-html-template
-  title: Sample HTML Website
-  description: Creates a basic HTML page
+  name: my-form-template
+  title: My Custom Form Template
+  description: A template that collects user input and performs an action
 spec:
   owner: user:guest
-  type: website
+  type: form
 
   parameters:
-    - title: Website Info
-      required: [name]
+    - title: Project Info
+      required:
+        - projectName
+        - ownerName
       properties:
-        name:
-          title: Website Name
+        projectName:
+          title: Project Name
           type: string
-          description: Name of your website
+          description: Name of your project
+        ownerName:
+          title: Owner Name
+          type: string
+          description: Who owns this project?
+        repoUrl:
+          title: GitHub Repo URL
+          type: string
+          description: Link to your GitHub repository
+        environment:
+          title: Environment
+          type: string
+          enum:
+            - dev
+            - staging
+            - prod
+          default: dev
+          description: Choose the deployment environment
 
   steps:
-    - id: fetch
-      name: Fetch Skeleton
-      action: fetch:template
+    - id: log-input
+      name: Log Input
+      action: debug:log
       input:
-        url: ./skeleton
-        values:
-          name: ${{ parameters.name }}
+        message: |
+          Received input:
+          Project Name: ${{ parameters.projectName }}
+          Owner: ${{ parameters.ownerName }}
+          Repo: ${{ parameters.repoUrl }}
+          Environment: ${{ parameters.environment }}
 
-    - id: register
-      name: Register in Catalog
-      action: catalog:register
+    - id: create-file
+      name: Create Config File
+      action: fs:write
       input:
-        repoContentsUrl: ${{ steps.fetch.output.repoContentsUrl }}
-        catalogInfoPath: '/catalog-info.yaml'
+        path: ./output/config.json
+        content: |
+          {
+            "projectName": "${{ parameters.projectName }}",
+            "ownerName": "${{ parameters.ownerName }}",
+            "repoUrl": "${{ parameters.repoUrl }}",
+            "environment": "${{ parameters.environment }}"
+          }
 
   output:
     links:
-      - title: View Website
-        url: ${{ steps.fetch.output.remoteUrl }}
+      - title: View Output File
+        url: ./output/config.json
