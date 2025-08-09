@@ -1,0 +1,32 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: server-reboot-form-template
+  title: Server Reboot Request Form
+  description: A template for submitting server reboot requests
+spec:
+  owner: user:default/prakashsbanu12
+  type: reboot-request
+  parameters:
+    - title: Provide Reboot Details
+      required:
+        - server_name
+        - reboot_reason
+      properties:
+        server_name:
+          title: Server Name
+          type: string
+          description: The name of the server to reboot
+        reboot_reason:
+          title: Reboot Reason
+          type: string
+          description: Reason for the reboot
+        proposed_time:
+          title: Proposed Reboot Time
+          type: string
+          description: Suggested time for reboot (e.g., YYYY-MM-DD HH:MM)
+  steps:
+    - action: debug:log
+      name: Log Reboot Details
+      input:
+        message: "Reboot requested for ${{ parameters.server_name }} at ${{ parameters.proposed_time }} due to ${{ parameters.reboot_reason }}"
