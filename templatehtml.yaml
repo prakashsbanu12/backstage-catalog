@@ -29,4 +29,3 @@ spec:
         name: ${{ parameters.name }}
         email: ${{ parameters.email }}
         age: ${{ parameters.age }}
-:wq
