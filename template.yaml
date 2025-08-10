@@ -1,32 +1,32 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: v1beta3-demo
-  title: V1Beta3 Demo Template
-  description: A demo template using v1beta3
+  name: user-registration
+  title: User Registration Form
+  description: Collect user info with date of birth
 spec:
-  owner: user:guest
-  type: service
+  owner: user-team
+  type: form
   parameters:
-    - title: Provide some information
-      required:
-        - name
+    - title: User Info
+      required: [name, dob]
       properties:
         name:
+          title: Full Name
           type: string
-          title: Name of the service
+          description: Enter your full name
+          ui:autofocus: true
+
+        dob:
+          title: Date of Birth
+          type: string
+          format: date
+          description: Select your date of birth
+          ui:widget: date
+
   steps:
-    - id: fetch
-      name: Fetch Skeleton
-      action: fetch:template
+    - id: log
+      name: Log User Info
+      action: debug:log
       input:
-        url: https://github.com/some-org/some-repo/tree/main/template
-        targetPath: ./workspace
-    - id: publish
-      name: Publish to GitHub
-      action: publish:github
-      input:
-        repoUrl: github.com?repo=my-repo&owner=my-org
-        title: ${{ parameters.name }}
-        description: Scaffolded from Backstage
-        visibility: public
+        message: "User ${{ parameters.name }} was born on ${{ parameters.dob }}"
