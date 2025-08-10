@@ -1,0 +1,32 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: user-form-template
+  title: User Info Form
+  description: Collect user info and store in DB
+spec:
+  owner: user:guest
+  type: service
+  parameters:
+    - title: Enter Your Details
+      required: [name, email, age]
+      properties:
+        name:
+          type: string
+          title: Full Name
+        email:
+          type: string
+          format: email
+          title: Email Address
+        age:
+          type: integer
+          title: Age
+  steps:
+    - id: store
+      name: Store in Database
+      action: custom:storeToDb
+      input:
+        name: ${{ parameters.name }}
+        email: ${{ parameters.email }}
+        age: ${{ parameters.age }}
+:wq
