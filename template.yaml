@@ -1,35 +1,32 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
-# some metadata about the template itself
 metadata:
   name: v1beta3-demo
-  title: Test Action template
-  description: scaffolder v1beta3 template demo
+  title: V1Beta3 Demo Template
+  description: A demo template using v1beta3
 spec:
-  owner: backstage/techdocs-core
+  owner: user:guest
   type: service
-
-  # these are the steps which are rendered in the frontend with the form input
   parameters:
-    - title: Fill in some steps
+    - title: Provide some information
       required:
         - name
       properties:
         name:
-          title: Name
           type: string
-          description: Unique name of the component
-          ui:autofocus: true
-          ui:options:
-            rows: 5
-    - title: Choose a location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository Location
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
+          title: Name of the service
+  steps:
+    - id: fetch
+      name: Fetch Skeleton
+      action: fetch:template
+      input:
+        url: https://github.com/some-org/some-repo/tree/main/template
+        targetPath: ./workspace
+    - id: publish
+      name: Publish to GitHub
+      action: publish:github
+      input:
+        repoUrl: github.com?repo=my-repo&owner=my-org
+        title: ${{ parameters.name }}
+        description: Scaffolded from Backstage
+        visibility: public
