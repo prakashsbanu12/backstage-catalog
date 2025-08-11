@@ -1,4 +1,4 @@
-```yaml
+
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
@@ -86,4 +86,3 @@ spec:
     links:
       - title: CMDB Excel Output
         url: ./cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}.xlsx
-```
