@@ -1,0 +1,89 @@
+```yaml
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cmdb-query-template
+  title: Query CMDB and Save to Excel
+  description: Fetch host details from CMDB, populate form with suggestions, and export to Excel
+spec:
+  owner: user:guest
+  type: service
+  parameters:
+    - title: Host Query Input
+      required:
+        - hostnames
+        - proposedSchedule
+      properties:
+        hostnames:
+          type: array
+          title: Hostnames
+          description: List of hostnames to query (suggestions provided)
+          items:
+            type: string
+          ui:options:
+            # Suggest hostnames from a pre-fetch API call
+            suggestions: ${{ steps.fetch-host-suggestions.output.body.hostnames | default([]) }}
+        proposedSchedule:
+          type: string
+          title: Proposed Schedule
+          default: "TBD"
+          description: Enter the proposed schedule for these hosts
+
+  steps:
+    # Stage 1: Pre-fetch hostname suggestions to populate form
+    - id: fetch-host-suggestions
+      name: Fetch Hostname Suggestions
+      action: fetch:plain
+      input:
+        method: GET
+        url: https://your-cmdb-api.example.com/hosts/suggestions
+        headers:
+          Authorization: Basic ${{ secrets.cmdb_auth }}
+          Content-Type: application/json
+      output:
+        body: hostSuggestions
+
+    # Stage 2: Fetch CMDB data based on form input
+    - id: fetch-cmdb-data
+      name: Fetch CMDB Data
+      action: fetch:plain
+      input:
+        method: POST
+        url: https://your-cmdb-api.example.com/query
+        headers:
+          Authorization: Basic ${{ secrets.cmdb_auth }}
+          Content-Type: application/json
+        body: |
+          {
+            "hostnames": ${{ parameters.hostnames }},
+            "schedule": "${{ parameters.proposedSchedule }}"
+          }
+      output:
+        body: cmdbResponse
+        statusCode: cmdbStatus
+
+    # Log response for debugging
+    - id: log-response
+      name: Log CMDB Response
+      action: debug:log
+      input:
+        message: "CMDB Response (Status: ${{ steps.fetch-cmdb-data.output.statusCode }}): ${{ steps.fetch-cmdb-data.output.body }}"
+
+    # Save form data and CMDB response to Excel
+    - id: save-to-excel
+      name: Save to Excel
+      action: custom:saveExcel
+      input:
+        data: |
+          {
+            "hostnames": ${{ parameters.hostnames }},
+            "schedule": "${{ parameters.proposedSchedule }}",
+            "cmdbResponse": ${{ steps.fetch-cmdb-data.output.body }}
+          }
+        filename: cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}.xlsx
+
+  output:
+    links:
+      - title: CMDB Excel Output
+        url: ./cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}.xlsx
+```
