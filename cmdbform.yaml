@@ -20,16 +20,16 @@ spec:
           items:
             type: string
           ui:options:
-            # Suggest hostnames from a pre-fetch API call
             suggestions: ${{ steps.fetch-host-suggestions.output.body.hostnames | default([]) }}
+            minItems: 1
+            uniqueItems: true
         proposedSchedule:
           type: string
           title: Proposed Schedule
           default: "TBD"
           description: Enter the proposed schedule for these hosts
-
+          ui:autofocus: true
   steps:
-    # Stage 1: Pre-fetch hostname suggestions to populate form
     - id: fetch-host-suggestions
       name: Fetch Hostname Suggestions
       action: fetch:plain
@@ -41,8 +41,13 @@ spec:
           Content-Type: application/json
       output:
         body: hostSuggestions
-
-    # Stage 2: Fetch CMDB data based on form input
+    - id: validate-input
+      name: Validate Form Input
+      action: custom:validateInput
+      input:
+        hostnames: ${{ parameters.hostnames }}
+      output:
+        isValid: validationResult
     - id: fetch-cmdb-data
       name: Fetch CMDB Data
       action: fetch:plain
@@ -60,28 +65,26 @@ spec:
       output:
         body: cmdbResponse
         statusCode: cmdbStatus
-
-    # Log response for debugging
     - id: log-response
       name: Log CMDB Response
       action: debug:log
       input:
         message: "CMDB Response (Status: ${{ steps.fetch-cmdb-data.output.statusCode }}): ${{ steps.fetch-cmdb-data.output.body }}"
-
-    # Save form data and CMDB response to Excel
     - id: save-to-excel
       name: Save to Excel
       action: custom:saveExcel
       input:
         data: |
           {
-            "hostnames": ${{ parameters.hostnames }},
-            "schedule": "${{ parameters.proposedSchedule }}",
+            "timestamp": "${{ now('YYYY-MM-DD HH:mm:ss') }}",
+            "userInput": {
+              "hostnames": ${{ parameters.hostnames }},
+              "schedule": "${{ parameters.proposedSchedule }}"
+            },
             "cmdbResponse": ${{ steps.fetch-cmdb-data.output.body }}
           }
-        filename: cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}.xlsx
-
+        filename: cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}_${{ now('YYYYMMDD_HHmmss') }}.xlsx
   output:
     links:
       - title: CMDB Excel Output
-        url: ./cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}.xlsx
+        url: ./cmdb_output_${{ parameters.proposedSchedule | replace(" ", "_") }}_${{ now('YYYYMMDD_HHmmss') }}.xlsx
