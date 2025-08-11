@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: user-registration
   title: User Registration Form
-  description: Collect user info with date of birth
+  description: Collect user info with date of birth and timestamp
 spec:
   owner: user-team
   type: form
@@ -25,8 +25,20 @@ spec:
           ui:widget: date
 
   steps:
+    - id: get-time
+      name: Get Current DateTime
+      action: fetch:plain
+      input:
+        url: https://worldtimeapi.org/api/timezone/Asia/Kolkata
+        method: GET
+        headers:
+          Accept: application/json
+
     - id: log
       name: Log User Info
       action: debug:log
       input:
-        message: "User ${{ parameters.name }} was born on ${{ parameters.dob }}"
+        message: |
+          User: ${{ parameters.name }}
+          Date of Birth: ${{ parameters.dob }}
+          Submitted At: ${{ steps['get-time'].output.datetime }}
