@@ -1,44 +1,54 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: user-registration
-  title: User Registration Form
-  description: Collect user info with date of birth and timestamp
+  name: cmdb-host-query
+  title: CMDB Host Info Collector
+  description: Query CMDB for host info and save results
 spec:
   owner: user-team
   type: form
   parameters:
-    - title: User Info
-      required: [name, dob]
+    - title: Host Info Input
+      required: [hostnames, proposedSchedule]
       properties:
-        name:
-          title: Full Name
+        hostnames:
+          title: Host Names
+          type: array
+          items:
+            type: string
+          description: Enter a list of hostnames to query
+        proposedSchedule:
+          title: Define Proposed Schedule
           type: string
-          description: Enter your full name
-          ui:autofocus: true
-
-        dob:
-          title: Date of Birth
-          type: string
-          format: date
-          description: Select your date of birth
-          ui:widget: date
-
+          description: Enter the proposed schedule for these hosts
   steps:
-    - id: get-time
-      name: Get Current DateTime
+    - id: fetch-host-details
+      name: Query CMDB for Host Info
       action: fetch:plain
       input:
-        url: https://worldtimeapi.org/api/timezone/Asia/Kolkata
+        url: https://eu-axxxxxx.biz/int/its-eu/table-mng-s-now/v1/api/now/table/cmdb_ci_server?sysparm_limit=10&sysparm_offset=0&name=${{ parameters.hostnames[0] }}
         method: GET
         headers:
           Accept: application/json
-
-    - id: log
-      name: Log User Info
+          Authorization: Basic ${{ secrets.cmdb_auth }} # base64 encoded client_id:secret
+    - id: parse-response
+      name: Extract Host Info
       action: debug:log
       input:
         message: |
-          User: ${{ parameters.name }}
-          Date of Birth: ${{ parameters.dob }}
-          Submitted At: ${{ steps['get-time'].output.datetime }}
+          Hostname: ${{ parameters.hostnames[0] }}
+          Owned By: ${{ steps['fetch-host-details'].output.body.result[0].owned_by.display_value }}
+          Environment: ${{ steps['fetch-host-details'].output.body.result[0].environment }}
+          Schedule: ${{ steps['fetch-host-details'].output.body.result[0].schedule }}
+          Proposed Schedule: ${{ parameters.proposedSchedule }}
+    - id: save-to-file
+      name: Save Host Info to File
+      action: custom:saveExcel
+      input:
+        filename: cmdb_host_info.xlsx
+        data:
+          - Hostname: ${{ parameters.hostnames[0] }}
+            Owned By: ${{ steps['fetch-host-details'].output.body.result[0].owned_by.display_value }}
+            Environment: ${{ steps['fetch-host-details'].output.body.result[0].environment }}
+            Schedule: ${{ steps['fetch-host-details'].output.body.result[0].schedule }}
+            Proposed Schedule: ${{ parameters.proposedSchedule }}
