@@ -1,41 +1,47 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cmdb-template
-  title: CMDB Catalog Generator
-  description: Fetches CMDB data and creates catalog-info.yaml
+  name: cmdb-dynamic-form
+  title: CMDB Dynamic Form Loader
+  description: Enter host name, fetch CMDB data, and prefill form
 
 spec:
   owner: user:guest
   type: service
 
   parameters:
-    - title: CMDB Component Info
-      required: [componentId, repoUrl]
+    - title: Step 1: Host Info
+      required: [hostName]
       properties:
-        componentId:
+        hostName:
           type: string
-          title: Component ID
-          description: Unique identifier to query CMDB
-        repoUrl:
-          type: string
-          title: GitHub Repository
-          description: Where to commit catalog-info.yaml
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
+          title: Host Name
+          description: Enter the hostname to query CMDB
 
   steps:
     - id: fetch-cmdb
       name: Fetch CMDB Data
       action: fetch:plain
       input:
-        url: https://your-cmdb-api/components/${{ parameters.componentId }}
+        url: https://your-cmdb-api/components/${{ parameters.hostName }}
         method: GET
 
-    - id: write-catalog
-      name: Write catalog-info.yaml
+    - id: write-form
+      name: Prefill Metadata Form
+      action: fs:write
+      input:
+        path: metadata-form.json
+        content: |
+          {
+            "name": "${{ parameters.hostName }}",
+            "owner": "${{ steps.fetch-cmdb.output.ownedBy }}",
+            "environment": "${{ steps.fetch-cmdb.output.environment }}",
+            "calendar": "${{ steps.fetch-cmdb.output.calendar }}",
+            "proposedDate": "${{ steps.fetch-cmdb.output.proposedDate }}"
+          }
+
+    - id: generate-catalog
+      name: Generate catalog-info.yaml
       action: fs:write
       input:
         path: catalog-info.yaml
@@ -43,8 +49,8 @@ spec:
           apiVersion: backstage.io/v1alpha1
           kind: Component
           metadata:
-            name: ${{ parameters.componentId }}
-            description: Generated from CMDB
+            name: ${{ parameters.hostName }}
+            description: Loaded from CMDB
             annotations:
               cmdb.io/calendar: ${{ steps.fetch-cmdb.output.calendar }}
               cmdb.io/proposed-date: ${{ steps.fetch-cmdb.output.proposedDate }}
@@ -54,24 +60,14 @@ spec:
             owner: ${{ steps.fetch-cmdb.output.ownedBy }}
             environment: ${{ steps.fetch-cmdb.output.environment }}
 
-    - id: publish
-      name: Commit to GitHub
-      action: publish:github
-      input:
-        repoUrl: ${{ parameters.repoUrl }}
-        branch: cmdb-${{ parameters.componentId }}
-        title: CMDB catalog-info.yaml for ${{ parameters.componentId }}
-        files:
-          - path: catalog-info.yaml
-
     - id: register
       name: Register in Catalog
       action: catalog:register
       input:
-        repoContentsUrl: ${{ parameters.repoUrl }}
+        repoContentsUrl: https://github.com/prakashsbanu12/backstage-catalog
         catalogInfoPath: catalog-info.yaml
 
   output:
-    links:
-      - title: View Component
-        url: /catalog/default/component/${{ parameters.componentId }}
+    text:
+      - title: Component Registered
+        content: Host ${{ parameters.hostName }} registered with CMDB metadata
