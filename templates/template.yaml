@@ -11,16 +11,74 @@ spec:
 
   parameters:
     - title: Component Info
-      required: [name]
+      required:
+        - name
+        - owner
+        - serverName
       properties:
         name:
-          type: string
           title: Component Name
+          type: string
           description: Unique name of the component
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
+        serverName:
+          title: Server Name
+          type: string
+          description: Name of the server to query in ServiceNow
+
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          description: GitHub repository for the component
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
 
   steps:
-    - id: log
-      name: Log Name
-      action: debug:log
+    - id: query-servicenow
+      name: Query ServiceNow
+      action: servicenow:queryServer
       input:
-        message: ${{ parameters.name }}
+        serverName: ${{ parameters.serverName }}
+
+    - id: commit-changes
+      name: Commit CMDB Data
+      action: git:commitChanges
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        branchName: cmdb-${{ parameters.name }}
+        filePath: cmdb/${{ parameters.name }}.json
+        data: ${{ steps.query-servicenow.output.serverData }}
+
+    - id: push-to-git
+      name: Push to GitHub
+      action: git:pushToGit
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        branchName: cmdb-${{ parameters.name }}
+
+    - id: create-pr
+      name: Create Pull Request
+      action: git:createPullRequest
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        branchName: cmdb-${{ parameters.name }}
+        title: CMDB Update for ${{ parameters.name }}
+        body: Auto-generated CMDB update from Backstage
+
+  output:
+    text:
+      - title: Git Flow Complete
+        content: Pull request created for ${{ parameters.name }} at ${{ parameters.repoUrl }}
