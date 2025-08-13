@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Template
+metadata:
+  name: host-details-flow
+  title: Host Details Flow
+  description: Fetch and confirm host info from CMDB
+spec:
+  type: service
+  path: ./template.yaml
