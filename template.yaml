@@ -1,11 +1,11 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cmdb-query-template
-  title: Query CMDB and Save to Excel
-  description: Fetch host details from CMDB and export to Excel
+  name: host-form-template
+  title: Host Form Template
+  description: A simple form to collect host details
 spec:
-  type: service
+  type: form
   owner: user:guest
   parameters:
     - title: Host Query Input
@@ -26,36 +26,10 @@ spec:
           description: Enter the proposed schedule (e.g., 2025-08-15 14:00)
 
   steps:
-    - id: fetch-cmdb-data
-      name: Fetch CMDB Data
-      action: fetch:plain
-      input:
-        method: POST
-        url: https://your-cmdb-api.example.com/query
-        headers:
-          Authorization: Basic ${{ secrets.cmdb_auth }}
-          Content-Type: application/json
-        body: |
-          {
-            "hostnames": ${{ parameters.hostnames }},
-            "schedule": "${{ parameters.proposedSchedule }}"
-          }
-        output: cmdbResponse
-
-    - id: log-response
-      name: Log CMDB Response
+    - id: log-input
+      name: Log Input
       action: debug:log
       input:
-        message: "CMDB Response: ${{ steps.fetch-cmdb-data.output.body }}"
-
-    - id: save-to-excel
-      name: Save to Excel
-      action: custom:saveExcel
-      input:
-        data: ${{ steps.fetch-cmdb-data.output.body }}
-        filename: cmdb_output.xlsx
-
-  output:
-    links:
-      - title: CMDB Excel Output
-        url: ./cmdb_output.xlsx
+        message: |
+          Hostnames: ${{ parameters.hostnames }}
+          Schedule: ${{ parameters.proposedSchedule }}
