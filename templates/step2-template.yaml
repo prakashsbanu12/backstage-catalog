@@ -1,0 +1,26 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cmdb-step2
+  title: Step 2: Metadata
+  description: Collect metadata and generate catalog-info.yaml
+
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Metadata
+      required: [name, owner, lifecycle]
+      properties:
+        name:
+          type: string
+          title: Component Name
+        owner:
+          type: string
+          title: Owner
+          ui:field: OwnerPicker
+        lifecycle:
+          type: string
+          title: Lifecycle
+          enum: [experimental, production, deprecated]
