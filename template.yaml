@@ -1,61 +1,33 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cmdb-query-template
-  title: Query CMDB and Save to Excel
-  description: Fetch host details from CMDB and export to Excel
+  name: host-form-template
 spec:
-  owner: user:guest
-  type: service
   parameters:
-    - title: Host Query Input
-      required:
-        - hostnames
-        - proposedSchedule
+    - title: Host Input
+      required: ['hostname', 'source']
       properties:
-        hostnames:
-          type: array
-          title: Hostnames
-          description: List of hostnames to query
-          items:
-            type: string
-        proposedSchedule:
+        hostname:
           type: string
-          title: Proposed Schedule
-          default: "TBD"
-          description: Enter the proposed schedule for these hosts
+        source:
+          type: string
+          enum: ['api', 'excel']
+        excelPath:
+          type: string
+          default: ./plugins/scaffolder-backend/actions/host-lookup/sample.xlsx
 
   steps:
-    - id: fetch-cmdb-data
-      name: Fetch CMDB Data
-      action: fetch:plain
+    - id: lookup
+      name: Lookup Host Info
+      action: custom:host-lookup
       input:
-        method: POST
-        url: https://your-cmdb-api.example.com/query
-        headers:
-          Authorization: Basic ${{ secrets.cmdb_auth }}
-          Content-Type: application/json
-        body: |
-          {
-            "hostnames": ${{ parameters.hostnames }},
-            "schedule": "${{ parameters.proposedSchedule }}"
-          }
-        output: cmdbResponse
+        hostname: ${{ parameters.hostname }}
+        source: ${{ parameters.source }}
+        excelPath: ${{ parameters.excelPath }}
 
-    - id: log-response
-      name: Log CMDB Response
+    - id: use-data
+      name: Use Host Data
       action: debug:log
       input:
-        message: "CMDB Response: ${{ steps.fetch-cmdb-data.output.body }}"
-
-    - id: save-to-excel
-      name: Save to Excel
-      action: custom:saveExcel
-      input:
-        data: ${{ steps.fetch-cmdb-data.output.body }}
-        filename: cmdb_output.xlsx
-
-  output:
-    links:
-      - title: CMDB Excel Output
-        url: ./cmdb_output.xlsx
+        message: |
+          Host Info: ${{ steps.lookup.output.hostData }}
