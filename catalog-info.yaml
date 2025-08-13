@@ -4,4 +4,4 @@ metadata:
   name: host-details-flow-location
 spec:
   type: file
-  target: ./template.yaml
+  target: templates/template.yaml
