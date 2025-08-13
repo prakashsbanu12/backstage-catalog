@@ -1,0 +1,30 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cmdb-step1
+  title: Step 1: Host Info
+  description: Collect hostname to query CMDB
+
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Host Info
+      required: [componentId]
+      properties:
+        componentId:
+          type: string
+          title: Host Name
+
+  steps:
+    - id: log
+      name: Log Hostname
+      action: debug:log
+      input:
+        message: "Host submitted: ${{ parameters.componentId }}"
+
+  output:
+    links:
+      - title: Continue to Step 2
+        url: /create/template/cmdb-step2
