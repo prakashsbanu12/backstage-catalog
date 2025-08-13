@@ -1,84 +1,53 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: cmdb-git-flow
-  title: CMDB Git Flow Automation
-  description: Automates Git workflow and queries ServiceNow
-
+  name: host-details-flow
+  title: Host Details Flow
+  description: Enter hostname, fetch details, and save
 spec:
+  type: form
   owner: user:guest
-  type: service
-
   parameters:
-    - title: Component Info
+    - title: Enter Hostname
       required:
-        - name
-        - owner
-        - serverName
+        - hostname
       properties:
-        name:
-          title: Component Name
+        hostname:
           type: string
-          description: Unique name of the component
-        owner:
-          title: Owner
-          type: string
-          description: Owner of the component
-          ui:field: OwnerPicker
-          ui:options:
-            catalogFilter:
-              kind: Group
-        serverName:
-          title: Server Name
-          type: string
-          description: Name of the server to query in ServiceNow
-
-    - title: Choose a location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Repository Location
-          type: string
-          description: GitHub repository for the component
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
+          title: Hostname
+          description: Enter the hostname to fetch details
 
   steps:
-    - id: query-servicenow
-      name: Query ServiceNow
-      action: servicenow:queryServer
+    - id: fetch-host-details
+      name: Fetch Host Details
+      action: fetch:plain
       input:
-        serverName: ${{ parameters.serverName }}
+        method: POST
+        url: https://your-api.example.com/host-details
+        headers:
+          Content-Type: application/json
+        body: |
+          {
+            "hostname": "${{ parameters.hostname }}"
+          }
+        output: hostData
 
-    - id: commit-changes
-      name: Commit CMDB Data
-      action: git:commitChanges
+    - id: confirm-details
+      name: Confirm Host Details
+      action: debug:log
       input:
-        repoUrl: ${{ parameters.repoUrl }}
-        branchName: cmdb-${{ parameters.name }}
-        filePath: cmdb/${{ parameters.name }}.json
-        data: ${{ steps.query-servicenow.output.serverData }}
+        message: |
+          ✅ Host Details Fetched:
+          ${{ steps.fetch-host-details.output.body }}
 
-    - id: push-to-git
-      name: Push to GitHub
-      action: git:pushToGit
+    - id: save-details
+      name: Save Host Details
+      action: custom:saveExcel
       input:
-        repoUrl: ${{ parameters.repoUrl }}
-        branchName: cmdb-${{ parameters.name }}
-
-    - id: create-pr
-      name: Create Pull Request
-      action: git:createPullRequest
-      input:
-        repoUrl: ${{ parameters.repoUrl }}
-        branchName: cmdb-${{ parameters.name }}
-        title: CMDB Update for ${{ parameters.name }}
-        body: Auto-generated CMDB update from Backstage
+        data: ${{ steps.fetch-host-details.output.body }}
+        filename: host_details.xlsx
 
   output:
-    text:
-      - title: Git Flow Complete
-        content: Pull request created for ${{ parameters.name }} at ${{ parameters.repoUrl }}
+    links:
+      - title: Download Host Details
+        url: ./host_details.xlsx
