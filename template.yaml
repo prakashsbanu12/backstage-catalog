@@ -2,32 +2,50 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: host-form-template
+  title: Host Form Template
+  description: A simple form to collect host details and log them
 spec:
+  type: form
+  owner: user:guest
   parameters:
-    - title: Host Input
-      required: ['hostname', 'source']
+    - title: Host Information
+      required:
+        - hostname
+        - environment
       properties:
         hostname:
           type: string
-        source:
+          title: Hostname
+          description: Enter the hostname of the server
+        environment:
           type: string
-          enum: ['api', 'excel']
-        excelPath:
-          type: string
-          default: ./plugins/scaffolder-backend/actions/host-lookup/sample.xlsx
+          title: Environment
+          description: Choose the deployment environment
+          enum:
+            - dev
+            - staging
+            - prod
+          default: dev
 
   steps:
-    - id: lookup
-      name: Lookup Host Info
-      action: custom:host-lookup
-      input:
-        hostname: ${{ parameters.hostname }}
-        source: ${{ parameters.source }}
-        excelPath: ${{ parameters.excelPath }}
-
-    - id: use-data
-      name: Use Host Data
+    - id: log-host-info
+      name: Log Host Info
       action: debug:log
       input:
         message: |
-          Host Info: ${{ steps.lookup.output.hostData }}
+          🖥️ Hostname: ${{ parameters.hostname }}
+          🌐 Environment: ${{ parameters.environment }}
+
+    - id: write-output
+      name: Write Output File
+      action: fs:write
+      input:
+        path: ./host-info.txt
+        content: |
+          Hostname: ${{ parameters.hostname }}
+          Environment: ${{ parameters.environment }}
+
+  output:
+    links:
+      - title: Download Host Info
+        url: ./host-info.txt
