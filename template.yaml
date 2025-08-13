@@ -1,51 +1,41 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: host-form-template
-  title: Host Form Template
-  description: A simple form to collect host details and log them
+  name: server-reboot-template
+  title: Server Reboot Scheduler
+  description: Form to schedule server reboot with API fetch and Excel export
 spec:
-  type: form
   owner: user:guest
+  type: service
   parameters:
-    - title: Host Information
+    - title: Server Details
       required:
-        - hostname
-        - environment
+        - serverName
+        - rebootWindow
       properties:
-        hostname:
+        serverName:
           type: string
-          title: Hostname
-          description: Enter the hostname of the server
-        environment:
+          title: Server Name
+          description: Enter the server name to fetch details
+          ui:autofocus: true  # Focus on this field first
+        hostname:  # This will be dynamically populated
           type: string
-          title: Environment
-          description: Choose the deployment environment
-          enum:
-            - dev
-            - staging
-            - prod
-          default: dev
-
-  steps:
-    - id: log-host-info
-      name: Log Host Info
-      action: debug:log
-      input:
-        message: |
-          🖥️ Hostname: ${{ parameters.hostname }}
-          🌐 Environment: ${{ parameters.environment }}
-
-    - id: write-output
-      name: Write Output File
-      action: fs:write
-      input:
-        path: ./host-info.txt
-        content: |
-          Hostname: ${{ parameters.hostname }}
-          Environment: ${{ parameters.environment }}
-
-  output:
-    links:
-      - title: Download Host Info
-        url: ./host-info.txt
+          title: Hostname (Auto-fetched)
+          ui:readonly: true  # Read-only after fetch
+        environment:  # This will be dynamically populated
+          type: string
+          title: Environment (Auto-fetched)
+          ui:readonly: true
+        rebootWindow:
+          type: string
+          format: date-time  # Enables date/time format
+          title: Proposed Reboot Window
+          description: Select the reboot date and time
+          ui:widget: DateTimePicker  # Renders a calendar picker
+          ui:options:
+            minDate: '2025-08-13T00:00:00Z'  # Example: Current date onward
+            maxDate: '2025-12-31T23:59:59Z'  # Limit range
+            showTime: true  # Include time selection
+            format: 'YYYY-MM-DD HH:mm'  # Display format
+  steps: []  # We'll add steps in later sections
+  output: {}  # We'll add outputs later
