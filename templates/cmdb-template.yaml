@@ -1,0 +1,77 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cmdb-template
+  title: CMDB Catalog Generator
+  description: Fetches CMDB data and creates catalog-info.yaml
+
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: CMDB Component Info
+      required: [componentId, repoUrl]
+      properties:
+        componentId:
+          type: string
+          title: Component ID
+          description: Unique identifier to query CMDB
+        repoUrl:
+          type: string
+          title: GitHub Repository
+          description: Where to commit catalog-info.yaml
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  steps:
+    - id: fetch-cmdb
+      name: Fetch CMDB Data
+      action: fetch:plain
+      input:
+        url: https://your-cmdb-api/components/${{ parameters.componentId }}
+        method: GET
+
+    - id: write-catalog
+      name: Write catalog-info.yaml
+      action: fs:write
+      input:
+        path: catalog-info.yaml
+        content: |
+          apiVersion: backstage.io/v1alpha1
+          kind: Component
+          metadata:
+            name: ${{ parameters.componentId }}
+            description: Generated from CMDB
+            annotations:
+              cmdb.io/calendar: ${{ steps.fetch-cmdb.output.calendar }}
+              cmdb.io/proposed-date: ${{ steps.fetch-cmdb.output.proposedDate }}
+          spec:
+            type: service
+            lifecycle: production
+            owner: ${{ steps.fetch-cmdb.output.ownedBy }}
+            environment: ${{ steps.fetch-cmdb.output.environment }}
+
+    - id: publish
+      name: Commit to GitHub
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        branch: cmdb-${{ parameters.componentId }}
+        title: CMDB catalog-info.yaml for ${{ parameters.componentId }}
+        files:
+          - path: catalog-info.yaml
+
+    - id: register
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ parameters.repoUrl }}
+        catalogInfoPath: catalog-info.yaml
+
+  output:
+    links:
+      - title: View Component
+        url: /catalog/default/component/${{ parameters.componentId }}
