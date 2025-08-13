@@ -2,7 +2,6 @@ apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: host-details-flow-location
-description: Location for the host-details-flow template
 spec:
   type: file
   target: ./template.yaml
