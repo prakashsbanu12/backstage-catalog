@@ -3,5 +3,5 @@ kind: Location
 metadata:
   name: host-details-flow-location
 spec:
-  type: file
+  type: url
   target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/template.yaml
