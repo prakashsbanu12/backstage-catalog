@@ -1,41 +1,61 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: server-reboot-template
-  title: Server Reboot Scheduler
-  description: Form to schedule server reboot with API fetch and Excel export
+  name: cmdb-query-template
+  title: Query CMDB and Save to Excel
+  description: Fetch host details from CMDB and export to Excel
 spec:
-  owner: user:guest
   type: service
+  owner: user:guest
   parameters:
-    - title: Server Details
+    - title: Host Query Input
       required:
-        - serverName
-        - rebootWindow
+        - hostnames
+        - proposedSchedule
       properties:
-        serverName:
+        hostnames:
+          type: array
+          title: Hostnames
+          description: List of hostnames to query
+          items:
+            type: string
+        proposedSchedule:
           type: string
-          title: Server Name
-          description: Enter the server name to fetch details
-          ui:autofocus: true  # Focus on this field first
-        hostname:  # This will be dynamically populated
-          type: string
-          title: Hostname (Auto-fetched)
-          ui:readonly: true  # Read-only after fetch
-        environment:  # This will be dynamically populated
-          type: string
-          title: Environment (Auto-fetched)
-          ui:readonly: true
-        rebootWindow:
-          type: string
-          format: date-time  # Enables date/time format
-          title: Proposed Reboot Window
-          description: Select the reboot date and time
-          ui:widget: DateTimePicker  # Renders a calendar picker
-          ui:options:
-            minDate: '2025-08-13T00:00:00Z'  # Example: Current date onward
-            maxDate: '2025-12-31T23:59:59Z'  # Limit range
-            showTime: true  # Include time selection
-            format: 'YYYY-MM-DD HH:mm'  # Display format
-  steps: []  # We'll add steps in later sections
-  output: {}  # We'll add outputs later
+          title: Proposed Schedule
+          default: "TBD"
+          description: Enter the proposed schedule (e.g., 2025-08-15 14:00)
+
+  steps:
+    - id: fetch-cmdb-data
+      name: Fetch CMDB Data
+      action: fetch:plain
+      input:
+        method: POST
+        url: https://your-cmdb-api.example.com/query
+        headers:
+          Authorization: Basic ${{ secrets.cmdb_auth }}
+          Content-Type: application/json
+        body: |
+          {
+            "hostnames": ${{ parameters.hostnames }},
+            "schedule": "${{ parameters.proposedSchedule }}"
+          }
+        output: cmdbResponse
+
+    - id: log-response
+      name: Log CMDB Response
+      action: debug:log
+      input:
+        message: "CMDB Response: ${{ steps.fetch-cmdb-data.output.body }}"
+
+    - id: save-to-excel
+      name: Save to Excel
+      action: custom:saveExcel
+      input:
+        data: ${{ steps.fetch-cmdb-data.output.body }}
+        filename: cmdb_output.xlsx
+
+  output:
+    links:
+      - title: CMDB Excel Output
+        url: ./cmdb_output.xlsx
