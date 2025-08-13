@@ -1,0 +1,26 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: cmdb-git-flow
+  title: CMDB Git Flow Automation
+  description: Automates Git workflow and queries ServiceNow
+
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Component Info
+      required: [name]
+      properties:
+        name:
+          type: string
+          title: Component Name
+          description: Unique name of the component
+
+  steps:
+    - id: log
+      name: Log Name
+      action: debug:log
+      input:
+        message: ${{ parameters.name }}
