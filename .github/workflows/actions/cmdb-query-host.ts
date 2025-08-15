@@ -1,3 +1,8 @@
+import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+dotenv.config();
+
 export const queryHostAction = createTemplateAction<{
   hostname: string;
 }>({
