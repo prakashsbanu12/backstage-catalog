@@ -1,1 +1,16 @@
-
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: host-001
+  description: Host registered via CMDB query
+  tags:
+    - cmdb
+    - environment:production
+    - schedule:nightly
+  annotations:
+    cmdb.io/owned-by: banu
+    cmdb.io/proposed-window: 2025-08-20 02:00–04:00
+spec:
+  type: service
+  lifecycle: production
+  owner: banu
