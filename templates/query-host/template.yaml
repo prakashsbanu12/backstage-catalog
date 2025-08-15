@@ -1,0 +1,30 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: banu-cmdb-query-host
+  title: Query Host from CMDB
+  description: Fetch host details from ServiceNow CMDB
+spec:
+  type: service
+  owner: banu
+  parameters:
+    - title: Host Query
+      required:
+        - hostname
+      properties:
+        hostname:
+          type: string
+          title: Hostname
+  steps:
+    - id: query-host
+      name: Query Host
+      action: banu:cmdb:query-host
+      input:
+        hostname: ${{ parameters.hostname }}
+  output:
+    text: |
+      ✅ Host details fetched successfully!
+      Hostname: ${{ steps.query-host.output.hostDetails.name }}
+      IP Address: ${{ steps.query-host.output.hostDetails.ip }}
+      Location: ${{ steps.query-host.output.hostDetails.location }}
+      Owner: ${{ steps.query-host.output.hostDetails.owner }}
