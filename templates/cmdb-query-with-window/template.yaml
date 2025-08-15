@@ -1,12 +1,12 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: banu-cmdb-query-with-window
-  title: Query CMDB and Propose Window
-  description: Fetch CMDB details and allow user to propose a change window
+  name: cmdb-host-registration
+  title: Register Host via CMDB
+  description: Queries ServiceNow CMDB and generates catalog-info.yaml
 spec:
-  type: service
   owner: banu
+  type: service
   parameters:
     - title: Host Input
       required: [hostname]
@@ -14,27 +14,20 @@ spec:
         hostname:
           type: string
           title: Hostname
-    - title: Proposed Window
-      required: [proposed_window]
-      properties:
-        proposed_window:
-          type: string
-          title: Proposed Change Window
-          description: Enter proposed time (e.g., 2025-08-20 02:00–04:00)
+          description: Enter the host name to query CMDB
   steps:
-    - id: query-host
-      name: Query Host from CMDB
+    - id: cmdb-query
+      name: Query CMDB
       action: banu:cmdb:query-host
       input:
         hostname: ${{ parameters.hostname }}
-    - id: summarize
-      name: Summarize Details
-      action: debug:log
+
+    - id: generate-yaml
+      name: Generate catalog-info.yaml
+      action: banu:cmdb:generate-yaml
       input:
-        message: |
-          ✅ CMDB Data Retrieved:
-          Hostname: ${{ parameters.hostname }}
-          Owned By: ${{ steps.query-host.output.hostDetails.owned_by }}
-          Environment: ${{ steps.query-host.output.hostDetails.environment }}
-          Schedule: ${{ steps.query-host.output.hostDetails.schedule }}
-          Proposed Window: ${{ parameters.proposed_window }}
+        hostname: ${{ parameters.hostname }}
+        owner: ${{ steps.cmdb-query.output.owner }}
+        environment: ${{ steps.cmdb-query.output.environment }}
+        schedule: ${{ steps.cmdb-query.output.schedule }}
+        proposed_window: ${{ steps.cmdb-query.output.proposed_window }}
