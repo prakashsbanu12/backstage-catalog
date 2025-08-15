@@ -1,1 +1,40 @@
-
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: banu-cmdb-query-with-window
+  title: Query CMDB and Propose Window
+  description: Fetch CMDB details and allow user to propose a change window
+spec:
+  type: service
+  owner: banu
+  parameters:
+    - title: Host Input
+      required: [hostname]
+      properties:
+        hostname:
+          type: string
+          title: Hostname
+    - title: Proposed Window
+      required: [proposed_window]
+      properties:
+        proposed_window:
+          type: string
+          title: Proposed Change Window
+          description: Enter proposed time (e.g., 2025-08-20 02:00–04:00)
+  steps:
+    - id: query-host
+      name: Query Host from CMDB
+      action: banu:cmdb:query-host
+      input:
+        hostname: ${{ parameters.hostname }}
+    - id: summarize
+      name: Summarize Details
+      action: debug:log
+      input:
+        message: |
+          ✅ CMDB Data Retrieved:
+          Hostname: ${{ parameters.hostname }}
+          Owned By: ${{ steps.query-host.output.hostDetails.owned_by }}
+          Environment: ${{ steps.query-host.output.hostDetails.environment }}
+          Schedule: ${{ steps.query-host.output.hostDetails.schedule }}
+          Proposed Window: ${{ parameters.proposed_window }}
