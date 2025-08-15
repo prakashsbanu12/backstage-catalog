@@ -1,7 +1,12 @@
 apiVersion: backstage.io/v1alpha1
-kind: Location
+kind: Component
 metadata:
-  name: host-details-flow-location
+  name: host-details-flow
+  description: Central launcher for CMDB workflows
+  annotations:
+    backstage.io/managed-by-location: url:https://github.com/prakashsbanu12/backstage-catalog/blob/main/catalog-info.yaml
+    backstage.io/managed-by-origin-location: url:https://github.com/prakashsbanu12/backstage-catalog/blob/main/catalog-info.yaml
 spec:
-  type: url
-  target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/template.yaml
+  type: service
+  lifecycle: experimental
+  owner: banu
