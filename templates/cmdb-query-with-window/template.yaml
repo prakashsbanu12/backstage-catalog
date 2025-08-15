@@ -3,31 +3,24 @@ kind: Template
 metadata:
   name: cmdb-host-registration
   title: Register Host via CMDB
-  description: Queries ServiceNow CMDB and generates catalog-info.yaml
+  description: Queries CMDB and generates catalog-info.yaml via GitHub workflow
 spec:
   owner: banu
   type: service
   parameters:
     - title: Host Input
-      required: [hostname]
+      required: [host_name]
       properties:
-        hostname:
+        host_name:
           type: string
-          title: Hostname
-          description: Enter the host name to query CMDB
+          title: Host Name
+          description: Enter the hostname to query CMDB
   steps:
-    - id: cmdb-query
-      name: Query CMDB
-      action: banu:cmdb:query-host
+    - id: trigger-cmdb-workflow
+      name: Trigger GitHub Workflow
+      action: github:actions:dispatch
       input:
-        hostname: ${{ parameters.hostname }}
-
-    - id: generate-yaml
-      name: Generate catalog-info.yaml
-      action: banu:cmdb:generate-yaml
-      input:
-        hostname: ${{ parameters.hostname }}
-        owner: ${{ steps.cmdb-query.output.owner }}
-        environment: ${{ steps.cmdb-query.output.environment }}
-        schedule: ${{ steps.cmdb-query.output.schedule }}
-        proposed_window: ${{ steps.cmdb-query.output.proposed_window }}
+        repoUrl: github.com?repo=banu/cmdb-host-registration
+        workflowId: cmdb-register.yaml
+        workflowInputs:
+          host_name: ${{ parameters.host_name }}
