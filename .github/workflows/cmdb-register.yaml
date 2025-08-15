@@ -1,0 +1,65 @@
+name: CMDB Host Registration
+
+on:
+  workflow_dispatch:
+    inputs:
+      host_name:
+        description: 'Host name to query'
+        required: true
+        type: string
+
+jobs:
+  register-host:
+    runs-on: ubuntu-latest
+    env:
+      SERVICENOW_TOKEN: ${{ secrets.SERVICENOW_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Query CMDB
+        id: cmdb
+        run: |
+          HOST="${{ github.event.inputs.host_name }}"
+          RESPONSE=$(curl -s -H "Authorization: Bearer $SERVICENOW_TOKEN" \
+            "https://your-instance.service-now.com/api/cmdb/host/$HOST")
+
+          echo "$RESPONSE" > cmdb.json
+          OWNER=$(jq -r '.owner' cmdb.json)
+          ENVIRONMENT=$(jq -r '.environment' cmdb.json)
+          SCHEDULE=$(jq -r '.schedule' cmdb.json)
+          WINDOW=$(jq -r '.proposed_window' cmdb.json)
+
+          echo "OWNER=$OWNER" >> $GITHUB_ENV
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+          echo "SCHEDULE=$SCHEDULE" >> $GITHUB_ENV
+          echo "WINDOW=$WINDOW" >> $GITHUB_ENV
+
+      - name: Generate catalog-info.yaml
+        run: |
+          cat <<EOF > catalog-info.yaml
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ github.event.inputs.host_name }}
+  description: Host registered via CMDB
+  tags:
+    - cmdb
+    - environment:${ENVIRONMENT}
+    - schedule:${SCHEDULE}
+  annotations:
+    cmdb.io/owned-by: ${OWNER}
+    cmdb.io/proposed-window: ${WINDOW}
+spec:
+  type: service
+  lifecycle: production
+  owner: ${OWNER}
+EOF
+
+      - name: Commit catalog-info.yaml
+        run: |
+          git config user.name "Backstage Bot"
+          git config user.email "bot@backstage.local"
+          git add catalog-info.yaml
+          git commit -m "Register host ${{ github.event.inputs.host_name }}"
+          git push
