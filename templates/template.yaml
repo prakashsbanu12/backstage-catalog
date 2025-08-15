@@ -1,53 +1,22 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: host-details-flow
-  title: Host Details Flow
-  description: Enter hostname, fetch details, and save
+  name: query-host
+  title: Query Host from CMDB
+  description: Fetches host details from ServiceNow CMDB
 spec:
-  type: form
-  owner: user:guest
+  owner: banu
   parameters:
-    - title: Enter Hostname
+    - title: Host Query
       required:
         - hostname
       properties:
         hostname:
           type: string
           title: Hostname
-          description: Enter the hostname to fetch details
-
   steps:
-    - id: fetch-host-details
-      name: Fetch Host Details
-      action: fetch:plain
+    - id: query-host
+      name: Query Host
+      action: banu:servicenow:query-host
       input:
-        method: POST
-        url: https://your-api.example.com/host-details
-        headers:
-          Content-Type: application/json
-        body: |
-          {
-            "hostname": "${{ parameters.hostname }}"
-          }
-        output: hostData
-
-    - id: confirm-details
-      name: Confirm Host Details
-      action: debug:log
-      input:
-        message: |
-          ✅ Host Details Fetched:
-          ${{ steps.fetch-host-details.output.body }}
-
-    - id: save-details
-      name: Save Host Details
-      action: custom:saveExcel
-      input:
-        data: ${{ steps.fetch-host-details.output.body }}
-        filename: host_details.xlsx
-
-  output:
-    links:
-      - title: Download Host Details
-        url: ./host_details.xlsx
+        hostname: ${{ parameters.hostname }}
