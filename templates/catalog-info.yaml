@@ -4,7 +4,7 @@ metadata:
   name: insert-host-template
 spec:
   type: url
-  target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/insert-host/template.yaml
+  target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/template.yaml
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Location
@@ -12,4 +12,4 @@ metadata:
   name: query-host-template
 spec:
   type: url
-  target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/query-host/template.yaml
+  target: https://github.com/prakashsbanu12/backstage-catalog/blob/main/templates/template.yaml
