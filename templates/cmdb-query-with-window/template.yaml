@@ -22,8 +22,9 @@ spec:
       name: Trigger GitHub Workflow
       action: github:actions:dispatch
       input:
-        repoUrl: https://github.com/banu/cmdb-host-registration
-        workflowId: .github/workflows/cmdb-register.yaml
+        repoUrl: github.com?repo=cmdb-host-registration&owner=banu
+        workflowId: cmdb-register.yaml
+        branchOrTagName: main  # ✅ Required field added
         workflowInputs:
           host_name: ${{ parameters.host_name }}
         token: ${{ secrets.GITHUB_TOKEN }}  # Assumes a token is available via Backstage secrets
