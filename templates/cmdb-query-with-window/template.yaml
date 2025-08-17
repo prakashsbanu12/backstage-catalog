@@ -9,18 +9,26 @@ spec:
   type: service
   parameters:
     - title: Host Input
-      required: [host_name]
+      required:
+        - host_name
       properties:
         host_name:
           type: string
           title: Host Name
           description: Enter the hostname to query CMDB
+          ui:widget: text
   steps:
     - id: trigger-cmdb-workflow
       name: Trigger GitHub Workflow
       action: github:actions:dispatch
       input:
-        repoUrl: github.com?repo=banu/cmdb-host-registration
-        workflowId: cmdb-register.yaml
+        repoUrl: https://github.com/banu/cmdb-host-registration
+        workflowId: .github/workflows/cmdb-register.yaml
         workflowInputs:
           host_name: ${{ parameters.host_name }}
+        token: ${{ secrets.GITHUB_TOKEN }}  # Assumes a token is available via Backstage secrets
+    - id: verify
+      name: Verify Workflow Completion
+      action: debug:log
+      input:
+        message: "Workflow triggered for host ${{ parameters.host_name }}. Check GitHub repository for catalog-info.yaml."
