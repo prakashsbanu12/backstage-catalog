@@ -5,7 +5,7 @@ metadata:
   title: Register Host via CMDB
   description: Queries CMDB and generates catalog-info.yaml via GitHub workflow
 spec:
-  owner: prakashsbanu12
+  owner: guest
   type: service
   parameters:
     - title: Host Input
