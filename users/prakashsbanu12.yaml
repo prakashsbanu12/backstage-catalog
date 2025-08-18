@@ -1,8 +1,7 @@
 apiVersion: backstage.io/v1alpha1
-kind: Group
+kind: User
 metadata:
   name: prakashsbanu12
-  description: Personal or team group for Backstage ownership
+  description: Developer and Backstage catalog owner
 spec:
-  type: team
-  children: []
+  memberOf: [prakashsbanu12]
